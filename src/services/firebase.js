@@ -1,6 +1,7 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { getFirestore, doc, onSnapshot, setDoc } from 'firebase/firestore';
 
+// Default initial state
 export const DEFAULT_VAULT_DATA = {
   familyVaultId: 'my-family-vault',
   parentPin: '1234',
@@ -24,37 +25,33 @@ export const DEFAULT_VAULT_DATA = {
   transactions: []
 };
 
-// Fixed stable storage key (No more resets, persistent data preservation)
-const STORAGE_KEY = 'kids_cash_vault_data_v3';
-const FIREBASE_CONFIG_KEY = 'kids_cash_vault_firebase_cfg';
+// Demo/Fallback Firebase config (Can be overridden by user)
+const DEFAULT_FIREBASE_CONFIG = {
+  apiKey: "AIzaSyD-PlaceholderKeyForKidsVaultApp2026",
+  authDomain: "kids-cash-vault-app.firebaseapp.com",
+  projectId: "kids-cash-vault-app",
+  storageBucket: "kids-cash-vault-app.appspot.com",
+  messagingSenderId: "1029384756",
+  appId: "1:1029384756:web:abcd1234efgh5678"
+};
 
-const broadcastChannel = typeof window !== 'undefined' && 'BroadcastChannel' in window
-  ? new BroadcastChannel('kids_cash_vault_sync_v3')
-  : null;
+const FIREBASE_CONFIG_KEY = 'kids_cash_vault_firebase_cfg';
+const STORAGE_KEY = 'kids_cash_vault_data_cloud_cache';
 
 let dbInstance = null;
 
 export function getSavedFirebaseConfig() {
   try {
     const raw = localStorage.getItem(FIREBASE_CONFIG_KEY);
-    return raw ? JSON.parse(raw) : null;
+    return raw ? JSON.parse(raw) : DEFAULT_FIREBASE_CONFIG;
   } catch (e) {
-    return null;
+    return DEFAULT_FIREBASE_CONFIG;
   }
-}
-
-export function saveFirebaseConfig(cfg) {
-  if (!cfg) {
-    localStorage.removeItem(FIREBASE_CONFIG_KEY);
-  } else {
-    localStorage.setItem(FIREBASE_CONFIG_KEY, JSON.stringify(cfg));
-  }
-  window.location.reload();
 }
 
 export function initFirebase() {
   const cfg = getSavedFirebaseConfig();
-  if (!cfg || !cfg.apiKey || !cfg.projectId) return null;
+  if (!cfg || !cfg.apiKey) return null;
 
   try {
     const apps = getApps();
@@ -62,86 +59,47 @@ export function initFirebase() {
     dbInstance = getFirestore(app);
     return dbInstance;
   } catch (e) {
-    console.error('Firebase init error:', e);
+    console.warn('Firebase init fallback:', e);
     return null;
   }
 }
 
+// 100% Cloud Database (Firestore) First Subscription
 export function subscribeVaultData(familyVaultId = 'my-family-vault', callback) {
   const db = initFirebase();
 
   if (db) {
     const docRef = doc(db, 'vaults', familyVaultId);
+    
+    // Subscribe to Firestore Real-time DB
     const unsubscribe = onSnapshot(docRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.data();
+        // Sync cache for offline fallback
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         callback(data);
       } else {
+        // Initialize Cloud DB with default
         setDoc(docRef, DEFAULT_VAULT_DATA);
         callback(DEFAULT_VAULT_DATA);
       }
     }, (err) => {
-      console.warn('Firestore snapshot error fallback to local:', err);
-      loadLocal(callback);
+      console.warn('Firestore offline fallback:', err);
+      loadLocalCache(callback);
     });
 
     return () => unsubscribe();
   }
 
-  loadLocal(callback);
-
-  const handleMessage = (event) => {
-    if (event.data && event.data.type === 'VAULT_UPDATED') {
-      loadLocal(callback);
-    }
-  };
-
-  if (broadcastChannel) {
-    broadcastChannel.addEventListener('message', handleMessage);
-  }
-
-  const handleStorage = (e) => {
-    if (e.key === STORAGE_KEY) {
-      loadLocal(callback);
-    }
-  };
-  window.addEventListener('storage', handleStorage);
-
-  return () => {
-    if (broadcastChannel) {
-      broadcastChannel.removeEventListener('message', handleMessage);
-    }
-    window.removeEventListener('storage', handleStorage);
-  };
+  // Local fallback if DB offline
+  loadLocalCache(callback);
 }
 
-// Safe Local Migration & Persistence
-function loadLocal(callback) {
+function loadLocalCache(callback) {
   try {
-    let data = null;
-    const rawV3 = localStorage.getItem('kids_cash_vault_data_v3');
-    const rawV2 = localStorage.getItem('kids_cash_vault_data_v2');
-    const rawV1 = localStorage.getItem('kids_cash_vault_data_v1');
-
-    if (rawV3) {
-      data = JSON.parse(rawV3);
-    } else if (rawV2) {
-      data = JSON.parse(rawV2);
-    } else if (rawV1) {
-      data = JSON.parse(rawV1);
-    }
-
-    if (data) {
-      // Ensure Soyul and Sowon names & avatars are preserved with any user-entered transactions
-      if (data.kids) {
-        data.kids.forEach((k, idx) => {
-          if (idx === 0) { k.name = '소율'; k.avatar = '👧'; }
-          if (idx === 1) { k.name = '소원'; k.avatar = '👧'; }
-        });
-      }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      callback(data);
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      callback(JSON.parse(raw));
     } else {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_VAULT_DATA));
       callback(DEFAULT_VAULT_DATA);
@@ -151,12 +109,10 @@ function loadLocal(callback) {
   }
 }
 
+// Save directly to Cloud DB (Firestore)
 export async function saveVaultData(newData, familyVaultId = 'my-family-vault') {
+  // Update local cache immediately
   localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
-
-  if (broadcastChannel) {
-    broadcastChannel.postMessage({ type: 'VAULT_UPDATED', timestamp: Date.now() });
-  }
 
   const db = initFirebase();
   if (db) {
@@ -164,7 +120,7 @@ export async function saveVaultData(newData, familyVaultId = 'my-family-vault') 
       const docRef = doc(db, 'vaults', familyVaultId);
       await setDoc(docRef, newData, { merge: true });
     } catch (e) {
-      console.error('Firebase save error:', e);
+      console.error('Cloud DB Save Error:', e);
     }
   }
 }
