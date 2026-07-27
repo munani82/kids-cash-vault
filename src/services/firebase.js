@@ -4,7 +4,7 @@ import { getFirestore, doc, onSnapshot, setDoc } from 'firebase/firestore';
 // Default initial state for Soyul & Sowon
 export const DEFAULT_VAULT_DATA = {
   familyVaultId: 'my-family-vault',
-  parentPin: '1234', // Default parent PIN
+  parentPin: '1234',
   activeKidId: 'kid1',
   kids: [
     {
@@ -58,11 +58,12 @@ export const DEFAULT_VAULT_DATA = {
   ]
 };
 
-const STORAGE_KEY = 'kids_cash_vault_data_v1';
+// Updated storage key to v2 to clear legacy local cache (Jiwoo/Minjun)
+const STORAGE_KEY = 'kids_cash_vault_data_v2';
 const FIREBASE_CONFIG_KEY = 'kids_cash_vault_firebase_cfg';
 
 const broadcastChannel = typeof window !== 'undefined' && 'BroadcastChannel' in window
-  ? new BroadcastChannel('kids_cash_vault_sync')
+  ? new BroadcastChannel('kids_cash_vault_sync_v2')
   : null;
 
 let dbInstance = null;
@@ -151,25 +152,20 @@ export function subscribeVaultData(familyVaultId = 'my-family-vault', callback) 
 
 function loadLocal(callback) {
   try {
+    // Clear old v1 key if present
+    localStorage.removeItem('kids_cash_vault_data_v1');
+
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
       let updated = false;
 
       if (parsed.kids) {
-        // Name & Avatar migration for Sowon
-        const sowon = parsed.kids.find(k => k.name === '소원' || k.id === 'kid2');
-        if (sowon && sowon.avatar === '👶') {
-          sowon.avatar = '👧';
-          updated = true;
-        }
-
-        const soyul = parsed.kids.find(k => k.id === 'kid1');
-        if (soyul && soyul.name !== '소율') {
-          soyul.name = '소율';
-          soyul.avatar = '👧';
-          updated = true;
-        }
+        parsed.kids.forEach(k => {
+          if (k.name === '지우') { k.name = '소율'; k.avatar = '👧'; updated = true; }
+          if (k.name === '민준') { k.name = '소원'; k.avatar = '👧'; updated = true; }
+          if (k.name === '소원' && k.avatar === '👶') { k.avatar = '👧'; updated = true; }
+        });
       }
 
       if (updated) {
