@@ -1,7 +1,6 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { getFirestore, doc, onSnapshot, setDoc } from 'firebase/firestore';
 
-// Default initial state for Soyul & Sowon
 export const DEFAULT_VAULT_DATA = {
   familyVaultId: 'my-family-vault',
   parentPin: '1234',
@@ -12,37 +11,20 @@ export const DEFAULT_VAULT_DATA = {
       name: '소율',
       avatar: '👧',
       color: '#3182f6',
-      balance: 50000
+      balance: 0
     },
     {
       id: 'kid2',
       name: '소원',
       avatar: '👧',
       color: '#ec4899',
-      balance: 30000
+      balance: 0
     }
   ],
-  transactions: [
-    {
-      id: 't1',
-      kidId: 'kid1',
-      type: 'deposit',
-      amount: 50000,
-      memo: '입금 (용돈)',
-      date: new Date(Date.now() - 86400000 * 2).toISOString()
-    },
-    {
-      id: 't2',
-      kidId: 'kid2',
-      type: 'deposit',
-      amount: 30000,
-      memo: '입금 (용돈)',
-      date: new Date(Date.now() - 86400000 * 1).toISOString()
-    }
-  ]
+  transactions: []
 };
 
-// Storage key v3 to completely replace transactions cache
+// Fixed stable storage key (No more resets, persistent data preservation)
 const STORAGE_KEY = 'kids_cash_vault_data_v3';
 const FIREBASE_CONFIG_KEY = 'kids_cash_vault_firebase_cfg';
 
@@ -134,16 +116,32 @@ export function subscribeVaultData(familyVaultId = 'my-family-vault', callback) 
   };
 }
 
+// Safe Local Migration & Persistence
 function loadLocal(callback) {
   try {
-    // Clear legacy v1 & v2 keys completely
-    localStorage.removeItem('kids_cash_vault_data_v1');
-    localStorage.removeItem('kids_cash_vault_data_v2');
+    let data = null;
+    const rawV3 = localStorage.getItem('kids_cash_vault_data_v3');
+    const rawV2 = localStorage.getItem('kids_cash_vault_data_v2');
+    const rawV1 = localStorage.getItem('kids_cash_vault_data_v1');
 
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      callback(parsed);
+    if (rawV3) {
+      data = JSON.parse(rawV3);
+    } else if (rawV2) {
+      data = JSON.parse(rawV2);
+    } else if (rawV1) {
+      data = JSON.parse(rawV1);
+    }
+
+    if (data) {
+      // Ensure Soyul and Sowon names & avatars are preserved with any user-entered transactions
+      if (data.kids) {
+        data.kids.forEach((k, idx) => {
+          if (idx === 0) { k.name = '소율'; k.avatar = '👧'; }
+          if (idx === 1) { k.name = '소원'; k.avatar = '👧'; }
+        });
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      callback(data);
     } else {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_VAULT_DATA));
       callback(DEFAULT_VAULT_DATA);
