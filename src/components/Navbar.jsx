@@ -1,9 +1,10 @@
 import React from 'react';
-import { ShieldCheck, Lock, Moon, Sun } from 'lucide-react';
+import { ShieldCheck, Lock, Moon, Sun, KeyRound } from 'lucide-react';
 
 export default function Navbar({
   isParentMode,
   onToggleParentMode,
+  onOpenChangePinModal,
   darkMode,
   onToggleDarkMode
 }) {
@@ -22,6 +23,17 @@ export default function Navbar({
 
         {/* Right Controls */}
         <div className="flex items-center gap-2">
+          {/* Parent Change PIN (Only in Parent mode) */}
+          {isParentMode && (
+            <button
+              onClick={onOpenChangePinModal}
+              className="p-2 rounded-full bg-gray-200/80 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-300 transition-colors"
+              title="비밀번호 변경"
+            >
+              <KeyRound className="w-4 h-4" />
+            </button>
+          )}
+
           {/* Parent Mode Toggle */}
           <button
             onClick={onToggleParentMode}

@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 
-export default function ParentPinModal({
+export default function ChangePinModal({
   isOpen,
-  correctPin,
+  currentPin,
   onClose,
-  onSuccess
+  onChangePinSuccess
 }) {
+  const [step, setStep] = useState(1); // 1: current pin, 2: new pin
   const [pinInput, setPinInput] = useState('');
+  const [newPin, setNewPin] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
   if (!isOpen) return null;
@@ -19,12 +21,21 @@ export default function ParentPinModal({
       setErrorMsg('');
 
       if (next.length === 4) {
-        if (next === correctPin) {
-          onSuccess();
+        if (step === 1) {
+          if (next === currentPin) {
+            setStep(2);
+            setPinInput('');
+          } else {
+            setErrorMsg('현재 비밀번호가 일치하지 않습니다.');
+            setTimeout(() => setPinInput(''), 400);
+          }
+        } else if (step === 2) {
+          // New PIN confirmed
+          onChangePinSuccess(next);
+          alert('비밀번호가 성공적으로 변경되었습니다!');
+          setStep(1);
           setPinInput('');
-        } else {
-          setErrorMsg('비밀번호가 일치하지 않습니다.');
-          setTimeout(() => setPinInput(''), 400);
+          onClose();
         }
       }
     }
@@ -39,17 +50,21 @@ export default function ParentPinModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-toss-modal">
       <div className="w-full max-w-xs p-6 bg-white dark:bg-gray-900 rounded-3xl text-center relative border border-gray-100 dark:border-gray-800 shadow-2xl">
         <button
-          onClick={onClose}
+          onClick={() => {
+            setStep(1);
+            setPinInput('');
+            onClose();
+          }}
           className="absolute top-4 right-4 p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"
         >
           <X className="w-5 h-5" />
         </button>
 
         <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100 mb-1 mt-2">
-          부모님 비밀번호
+          비밀번호 변경
         </h3>
         <p className="text-xs text-gray-400 mb-5">
-          비밀번호 4자리를 입력하세요
+          {step === 1 ? '현재 비밀번호 4자리를 입력하세요' : '새로운 비밀번호 4자리를 입력하세요'}
         </p>
 
         {/* PIN Dots */}

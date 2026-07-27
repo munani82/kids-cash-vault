@@ -5,6 +5,7 @@ import VaultDashboard from './components/VaultDashboard';
 import TransactionHistory from './components/TransactionHistory';
 import DepositWithdrawModal from './components/DepositWithdrawModal';
 import ParentPinModal from './components/ParentPinModal';
+import ChangePinModal from './components/ChangePinModal';
 import { subscribeVaultData, saveVaultData, DEFAULT_VAULT_DATA } from './services/firebase';
 
 export default function App() {
@@ -15,6 +16,7 @@ export default function App() {
 
   // Modals
   const [pinModalOpen, setPinModalOpen] = useState(false);
+  const [changePinModalOpen, setChangePinModalOpen] = useState(false);
   const [depWithModal, setDepWithModal] = useState({ isOpen: false, mode: 'deposit' });
 
   // Realtime subscription
@@ -54,6 +56,16 @@ export default function App() {
   const handlePinSuccess = () => {
     setIsParentMode(true);
     setPinModalOpen(false);
+  };
+
+  // Change PIN Success
+  const handleChangePinSuccess = async (newPin) => {
+    const updatedVault = {
+      ...vaultData,
+      parentPin: newPin
+    };
+    setVaultData(updatedVault);
+    await saveVaultData(updatedVault);
   };
 
   // Deposit or Withdraw submit
@@ -148,6 +160,7 @@ export default function App() {
       <Navbar
         isParentMode={isParentMode}
         onToggleParentMode={handleToggleParentMode}
+        onOpenChangePinModal={() => setChangePinModalOpen(true)}
         darkMode={darkMode}
         onToggleDarkMode={() => setDarkMode(!darkMode)}
       />
@@ -195,6 +208,13 @@ export default function App() {
         correctPin={vaultData.parentPin || '1234'}
         onClose={() => setPinModalOpen(false)}
         onSuccess={handlePinSuccess}
+      />
+
+      <ChangePinModal
+        isOpen={changePinModalOpen}
+        currentPin={vaultData.parentPin || '1234'}
+        onClose={() => setChangePinModalOpen(false)}
+        onChangePinSuccess={handleChangePinSuccess}
       />
     </div>
   );

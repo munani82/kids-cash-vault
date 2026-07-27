@@ -1,7 +1,7 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { getFirestore, doc, onSnapshot, setDoc, updateDoc } from 'firebase/firestore';
+import { getFirestore, doc, onSnapshot, setDoc } from 'firebase/firestore';
 
-// Default initial state
+// Default initial state for Soyul & Sowon
 export const DEFAULT_VAULT_DATA = {
   familyVaultId: 'my-family-vault',
   parentPin: '1234', // Default parent PIN
@@ -9,34 +9,26 @@ export const DEFAULT_VAULT_DATA = {
   kids: [
     {
       id: 'kid1',
-      name: '지우',
-      avatar: '🐶',
-      color: '#7c3aed',
-      balance: 45000,
-      goals: [
-        { id: 'g1', title: '닌텐도 스위치 칩', targetAmount: 65000, icon: '🎮' },
-        { id: 'g2', title: '레고 블록 세트', targetAmount: 30000, icon: '🧱' }
-      ]
+      name: '소율',
+      avatar: '👧',
+      color: '#3182f6',
+      balance: 45000
     },
     {
       id: 'kid2',
-      name: '민준',
-      avatar: '🐱',
+      name: '소원',
+      avatar: '👶',
       color: '#ec4899',
-      balance: 28000,
-      goals: [
-        { id: 'g3', title: '자전거 장갑', targetAmount: 15000, icon: '🚲' }
-      ]
+      balance: 28000
     }
   ],
   transactions: [
     {
       id: 't1',
       kidId: 'kid1',
-      type: 'deposit', // deposit or withdraw
+      type: 'deposit',
       amount: 50000,
-      category: '세뱃돈',
-      memo: '할머니께 받은 설 세뱃돈',
+      memo: '할머니께 받은 용돈',
       date: new Date(Date.now() - 86400000 * 3).toISOString()
     },
     {
@@ -44,7 +36,6 @@ export const DEFAULT_VAULT_DATA = {
       kidId: 'kid1',
       type: 'withdraw',
       amount: 5000,
-      category: '간식',
       memo: '아이스크림 사먹기',
       date: new Date(Date.now() - 86400000 * 1).toISOString()
     },
@@ -53,8 +44,7 @@ export const DEFAULT_VAULT_DATA = {
       kidId: 'kid2',
       type: 'deposit',
       amount: 30000,
-      category: '용돈',
-      memo: '이번 달 정기 용돈',
+      memo: '이번 달 용돈',
       date: new Date(Date.now() - 86400000 * 2).toISOString()
     },
     {
@@ -62,8 +52,7 @@ export const DEFAULT_VAULT_DATA = {
       kidId: 'kid2',
       type: 'withdraw',
       amount: 2000,
-      category: '학용품',
-      memo: '공책 구매',
+      memo: '학용품 구매',
       date: new Date(Date.now() - 86400000 * 0.5).toISOString()
     }
   ]
@@ -72,7 +61,6 @@ export const DEFAULT_VAULT_DATA = {
 const STORAGE_KEY = 'kids_cash_vault_data_v1';
 const FIREBASE_CONFIG_KEY = 'kids_cash_vault_firebase_cfg';
 
-// BroadcastChannel for cross-tab local sync if Firebase not set
 const broadcastChannel = typeof window !== 'undefined' && 'BroadcastChannel' in window
   ? new BroadcastChannel('kids_cash_vault_sync')
   : null;
@@ -112,11 +100,9 @@ export function initFirebase() {
   }
 }
 
-// Subscribe to real-time changes
 export function subscribeVaultData(familyVaultId = 'my-family-vault', callback) {
   const db = initFirebase();
 
-  // If Firebase is active, listen via Firestore onSnapshot
   if (db) {
     const docRef = doc(db, 'vaults', familyVaultId);
     const unsubscribe = onSnapshot(docRef, (snapshot) => {
@@ -125,7 +111,6 @@ export function subscribeVaultData(familyVaultId = 'my-family-vault', callback) 
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         callback(data);
       } else {
-        // Initialize doc with default
         setDoc(docRef, DEFAULT_VAULT_DATA);
         callback(DEFAULT_VAULT_DATA);
       }
@@ -137,7 +122,6 @@ export function subscribeVaultData(familyVaultId = 'my-family-vault', callback) 
     return () => unsubscribe();
   }
 
-  // Fallback: LocalStorage + BroadcastChannel for same-device realtime multi-tabs
   loadLocal(callback);
 
   const handleMessage = (event) => {
@@ -169,7 +153,18 @@ function loadLocal(callback) {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      callback(JSON.parse(raw));
+      const parsed = JSON.parse(raw);
+      // Migration check for names
+      if (parsed.kids && parsed.kids[0]?.name === '지우') {
+        parsed.kids[0].name = '소율';
+        parsed.kids[0].avatar = '👧';
+        if (parsed.kids[1]) {
+          parsed.kids[1].name = '소원';
+          parsed.kids[1].avatar = '👶';
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+      }
+      callback(parsed);
     } else {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_VAULT_DATA));
       callback(DEFAULT_VAULT_DATA);
@@ -179,9 +174,7 @@ function loadLocal(callback) {
   }
 }
 
-// Save vault data (Parent updates balance, transactions, goals)
 export async function saveVaultData(newData, familyVaultId = 'my-family-vault') {
-  // Update local storage first
   localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
 
   if (broadcastChannel) {
