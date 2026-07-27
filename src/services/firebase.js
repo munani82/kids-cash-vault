@@ -1,4 +1,4 @@
-// Standard Reliable Persistent Vault Storage Engine
+// 100% Pure Cloud DB Engine (No Local Storage Blocking)
 
 export const DEFAULT_VAULT_DATA = {
   familyVaultId: 'my-family-vault',
@@ -11,46 +11,55 @@ export const DEFAULT_VAULT_DATA = {
   transactions: []
 };
 
-const PERSISTENT_STORAGE_KEY = 'kids_vault_persistent_db_v10';
+// Clean Live Cloud Endpoint
+const PURE_CLOUD_URL = 'https://jsonblob.com/api/jsonBlob/019fa21f-e3db-7c35-88d2-7e4a9bf04c2d';
 
-// 1. Always load stored data first on refresh
-export function getInitialVaultData() {
-  try {
-    const stored = localStorage.getItem(PERSISTENT_STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      if (parsed && parsed.kids) return parsed;
-    }
-  } catch (e) {
-    console.error('Error loading vault storage:', e);
-  }
-  return DEFAULT_VAULT_DATA;
-}
+let isSaving = false;
 
-// 2. Subscribe & Listen to data changes across tabs/windows
+// 1. Subscribe to Cloud DB ONLY (PC <-> Mobile 100% Direct Realtime Cloud Sync)
 export function subscribeVaultData(familyVaultId = 'my-family-vault', callback) {
-  // Deliver persistent data on mount immediately
-  const initialData = getInitialVaultData();
-  callback(initialData);
+  // Fetch directly from Cloud DB on load
+  const syncWithCloud = async () => {
+    if (isSaving) return;
+    try {
+      const res = await fetch(PURE_CLOUD_URL + '?t=' + Date.now(), {
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+      });
 
-  // Cross-tab realtime sync listener
-  const handleStorageChange = (e) => {
-    if (e.key === PERSISTENT_STORAGE_KEY && e.newValue) {
-      try {
-        callback(JSON.parse(e.newValue));
-      } catch (err) {}
+      if (res.ok) {
+        const cloudData = await res.json();
+        if (cloudData && cloudData.kids) {
+          // Always deliver Cloud DB data directly to UI
+          callback(cloudData);
+        }
+      }
+    } catch (e) {
+      console.warn('Pure Cloud DB Sync Error:', e);
     }
   };
 
-  window.addEventListener('storage', handleStorageChange);
-  return () => window.removeEventListener('storage', handleStorageChange);
+  syncWithCloud();
+  // Poll Cloud DB every 2 seconds so phone immediately reflects PC edits
+  const intervalId = setInterval(syncWithCloud, 2000);
+
+  return () => clearInterval(intervalId);
 }
 
-// 3. Save Vault Data permanently so refresh NEVER resets PIN or transactions
-export async function saveVaultData(newData) {
+// 2. Save directly to Cloud DB (PUT)
+export async function saveVaultData(newData, familyVaultId = 'my-family-vault') {
+  isSaving = true;
+
   try {
-    localStorage.setItem(PERSISTENT_STORAGE_KEY, JSON.stringify(newData));
+    await fetch(PURE_CLOUD_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newData)
+    });
   } catch (e) {
-    console.error('Error saving vault storage:', e);
+    console.error('Pure Cloud Save Error:', e);
+  } finally {
+    setTimeout(() => {
+      isSaving = false;
+    }, 400);
   }
 }
