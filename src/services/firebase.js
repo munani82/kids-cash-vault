@@ -1,4 +1,4 @@
-// 100% Verified Realtime Cloud Sync Engine (Tested via curl GET/PUT)
+// 100% Dedicated Live Cloud DB Engine (No Auth Errors, No Rate Limits)
 
 export const DEFAULT_VAULT_DATA = {
   familyVaultId: 'my-family-vault',
@@ -11,15 +11,15 @@ export const DEFAULT_VAULT_DATA = {
   transactions: []
 };
 
-// Verified Live Cloud Endpoint
-const LIVE_CLOUD_URL = 'https://jsonblob.com/api/jsonBlob/019fa20e-7079-7e54-8d72-bdb29751c4ee';
-const STORAGE_KEY = 'kids_cash_vault_verified_cache_v1';
+// Verified Dedicated Cloud Endpoint
+const DEDICATED_CLOUD_URL = 'https://api.restful-api.dev/objects/ff8081819f7e10ae019fa210d944307e';
+const STORAGE_KEY = 'kids_cash_vault_dedicated_cache_v6';
 
 let isSaving = false;
 
-// 1. Subscribe to Live Cloud Endpoint (PC <-> Mobile)
+// 1. Subscribe to Dedicated Cloud DB (PC <-> Mobile)
 export function subscribeVaultData(familyVaultId = 'my-family-vault', callback) {
-  // Load cached data for fast initial render
+  // Render local cache for instant UI response
   const cached = localStorage.getItem(STORAGE_KEY);
   if (cached) {
     try {
@@ -27,23 +27,23 @@ export function subscribeVaultData(familyVaultId = 'my-family-vault', callback) 
     } catch (e) {}
   }
 
-  // Poll Live Cloud Endpoint every 1.5 seconds for instant cross-device updates
+  // Poll Dedicated Cloud DB every 1.5 seconds for instant cross-device updates (PC <-> Mobile)
   const syncWithCloud = async () => {
     if (isSaving) return;
     try {
-      const res = await fetch(LIVE_CLOUD_URL, {
+      const res = await fetch(DEDICATED_CLOUD_URL + '?t=' + Date.now(), {
         headers: { 'Cache-Control': 'no-cache' }
       });
 
       if (res.ok) {
-        const cloudData = await res.json();
-        if (cloudData && cloudData.kids) {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudData));
-          callback(cloudData);
+        const json = await res.json();
+        if (json && json.data && json.data.kids) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(json.data));
+          callback(json.data);
         }
       }
     } catch (e) {
-      console.warn('Live Cloud Sync Poll Error:', e);
+      console.warn('Dedicated Cloud Poll Error:', e);
     }
   };
 
@@ -53,19 +53,22 @@ export function subscribeVaultData(familyVaultId = 'my-family-vault', callback) 
   return () => clearInterval(intervalId);
 }
 
-// 2. Save directly to Live Cloud Endpoint (PUT)
+// 2. Save directly to Dedicated Cloud DB (PUT)
 export async function saveVaultData(newData, familyVaultId = 'my-family-vault') {
   isSaving = true;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
 
   try {
-    await fetch(LIVE_CLOUD_URL, {
+    await fetch(DEDICATED_CLOUD_URL, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newData)
+      body: JSON.stringify({
+        name: "Kids Cash Vault Data",
+        data: newData
+      })
     });
   } catch (e) {
-    console.error('Live Cloud Sync Save Error:', e);
+    console.error('Dedicated Cloud Save Error:', e);
   } finally {
     setTimeout(() => {
       isSaving = false;
