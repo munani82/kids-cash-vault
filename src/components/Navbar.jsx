@@ -11,11 +11,13 @@ export default function Navbar({
   return (
     <header className="w-full max-w-xl mx-auto px-5 pt-6 pb-2">
       <div className="flex items-center justify-between">
-        {/* App Title */}
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-2xl bg-[#3182f6] text-white font-extrabold text-base flex items-center justify-center shadow-sm">
-            ₩
-          </div>
+        {/* App Title with 3D App Icon */}
+        <div className="flex items-center gap-3">
+          <img
+            src="/icon.png"
+            alt="아이금고 아이콘"
+            className="w-10 h-10 rounded-2xl shadow-sm object-cover"
+          />
           <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
             아이금고
           </span>
