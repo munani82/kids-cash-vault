@@ -11,13 +11,11 @@ export default function Navbar({
   return (
     <header className="w-full max-w-2xl mx-auto px-4 pt-5 pb-2">
       <div className="flex items-center justify-between">
-        {/* App Title with 3D App Icon */}
-        <div className="flex items-center gap-3">
-          <img
-            src="/icon.png"
-            alt="아이금고 아이콘"
-            className="w-10 h-10 rounded-2xl shadow-sm object-cover"
-          />
+        {/* App Title with Original Piggy Emoji Icon */}
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-2xl bg-[#3182f6] text-white font-extrabold text-lg flex items-center justify-center shadow-sm">
+            🐷
+          </div>
           <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
             아이금고
           </span>
