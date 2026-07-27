@@ -17,19 +17,30 @@ export default function DepositWithdrawModal({
 
   const quickAmounts = [5000, 10000, 50000, 100000];
 
+  const handleAmountChange = (e) => {
+    // Strip non-digits
+    const rawValue = e.target.value.replace(/[^0-9]/g, '');
+    if (!rawValue) {
+      setAmount('');
+    } else {
+      setAmount(Number(rawValue).toLocaleString());
+    }
+  };
+
   const handleQuickAdd = (val) => {
-    const current = Number(amount) || 0;
-    setAmount(String(current + val));
+    const rawCurrent = Number(amount.replace(/,/g, '')) || 0;
+    const nextVal = rawCurrent + val;
+    setAmount(nextVal.toLocaleString());
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const numAmount = Number(amount);
-    if (!numAmount || numAmount <= 0) return;
+    const rawNum = Number(amount.replace(/,/g, ''));
+    if (!rawNum || rawNum <= 0) return;
 
     onSubmit({
       type: mode,
-      amount: numAmount,
+      amount: rawNum,
       memo: memo.trim()
     });
 
@@ -69,17 +80,18 @@ export default function DepositWithdrawModal({
             ))}
           </div>
 
-          {/* Amount input */}
+          {/* Amount input with thousand separator */}
           <div>
             <label className="block text-xs font-bold text-gray-400 mb-1">
               금액
             </label>
             <div className="relative">
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 placeholder="0"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={handleAmountChange}
                 className="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xl font-bold font-number text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
                 autoFocus
