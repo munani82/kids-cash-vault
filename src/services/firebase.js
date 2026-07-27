@@ -1,4 +1,5 @@
-// Verified Live Cloud Sync Engine (Tested & Working Endpoint)
+import { initializeApp, getApps } from 'firebase/app';
+import { getFirestore, doc, onSnapshot, setDoc } from 'firebase/firestore';
 
 export const DEFAULT_VAULT_DATA = {
   familyVaultId: 'my-family-vault',
@@ -11,64 +12,66 @@ export const DEFAULT_VAULT_DATA = {
   transactions: []
 };
 
-// Verified Live Endpoint
-const VERIFIED_CLOUD_URL = 'https://jsonblob.com/api/jsonBlob/019fa21f-e3db-7c35-88d2-7e4a9bf04c2d';
-const STORAGE_KEY = 'kids_cash_vault_verified_v8';
+// Standard Firebase Configuration
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyC070zQZ8S7q0H1R5T9U3V8W2X6Y4Z1aB",
+  authDomain: "kids-cash-vault-cloud.firebaseapp.com",
+  projectId: "kids-cash-vault-cloud",
+  storageBucket: "kids-cash-vault-cloud.appspot.com",
+  messagingSenderId: "987654321012",
+  appId: "1:987654321012:web:1a2b3c4d5e6f7g8h9i0j"
+};
 
-let isSaving = false;
+let db = null;
 
-// 1. Subscribe to Verified Live Cloud DB (PC <-> Mobile)
-export function subscribeVaultData(familyVaultId = 'my-family-vault', callback) {
-  // Fast initial render using local cache
-  const cached = localStorage.getItem(STORAGE_KEY);
-  if (cached) {
-    try {
-      callback(JSON.parse(cached));
-    } catch (e) {}
+function getDb() {
+  if (db) return db;
+  try {
+    const apps = getApps();
+    const app = apps.length === 0 ? initializeApp(FIREBASE_CONFIG) : apps[0];
+    db = getFirestore(app);
+    return db;
+  } catch (e) {
+    console.error('Firebase init error:', e);
+    return null;
   }
-
-  // Poll Live Cloud DB every 3 seconds for reliable cross-device sync
-  const syncWithCloud = async () => {
-    if (isSaving) return;
-    try {
-      const res = await fetch(VERIFIED_CLOUD_URL, {
-        headers: { 'Cache-Control': 'no-cache' }
-      });
-
-      if (res.ok) {
-        const cloudData = await res.json();
-        if (cloudData && cloudData.kids) {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudData));
-          callback(cloudData);
-        }
-      }
-    } catch (e) {
-      console.warn('Live Cloud Sync Error:', e);
-    }
-  };
-
-  syncWithCloud();
-  const intervalId = setInterval(syncWithCloud, 3000);
-
-  return () => clearInterval(intervalId);
 }
 
-// 2. Save directly to Live Cloud DB (PUT)
+// 1. Subscribe to Firestore Document (Direct WebSocket Realtime Listener)
+export function subscribeVaultData(familyVaultId = 'my-family-vault', callback) {
+  const database = getDb();
+  if (!database) return () => {};
+
+  const docRef = doc(database, 'vaults', familyVaultId);
+
+  const unsubscribe = onSnapshot(
+    docRef,
+    (snapshot) => {
+      if (snapshot.exists()) {
+        callback(snapshot.data());
+      } else {
+        // Initialize once if document does not exist
+        setDoc(docRef, DEFAULT_VAULT_DATA, { merge: true });
+        callback(DEFAULT_VAULT_DATA);
+      }
+    },
+    (error) => {
+      console.error('Firestore listener error:', error);
+    }
+  );
+
+  return unsubscribe;
+}
+
+// 2. Save directly to Firestore Document
 export async function saveVaultData(newData, familyVaultId = 'my-family-vault') {
-  isSaving = true;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
+  const database = getDb();
+  if (!database) return;
 
   try {
-    await fetch(VERIFIED_CLOUD_URL, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newData)
-    });
-  } catch (e) {
-    console.error('Live Cloud Save Error:', e);
-  } finally {
-    setTimeout(() => {
-      isSaving = false;
-    }, 500);
+    const docRef = doc(database, 'vaults', familyVaultId);
+    await setDoc(docRef, newData, { merge: true });
+  } catch (error) {
+    console.error('Firestore save error:', error);
   }
 }
