@@ -12,7 +12,7 @@ export default function TransactionHistory({
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
   return (
-    <div className="w-full max-w-xl mx-auto px-5 py-3">
+    <div className="w-full max-w-2xl mx-auto px-4 py-3">
       <div className="toss-card">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold text-base text-gray-900 dark:text-gray-100">

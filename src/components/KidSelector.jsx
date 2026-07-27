@@ -9,7 +9,7 @@ export default function KidSelector({
   onAddKid
 }) {
   return (
-    <div className="w-full max-w-2xl mx-auto px-5 py-3">
+    <div className="w-full max-w-2xl mx-auto px-4 py-2">
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
         {kids.map((kid) => {
           const isActive = kid.id === activeKidId;

@@ -9,7 +9,7 @@ export default function Navbar({
   onToggleDarkMode
 }) {
   return (
-    <header className="w-full max-w-xl mx-auto px-5 pt-6 pb-2">
+    <header className="w-full max-w-2xl mx-auto px-4 pt-5 pb-2">
       <div className="flex items-center justify-between">
         {/* App Title with 3D App Icon */}
         <div className="flex items-center gap-3">

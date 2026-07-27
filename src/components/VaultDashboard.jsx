@@ -11,7 +11,7 @@ export default function VaultDashboard({
   const balance = kid.balance || 0;
 
   return (
-    <div className="w-full max-w-xl mx-auto px-5 py-2">
+    <div className="w-full max-w-2xl mx-auto px-4 py-2">
       <div className="toss-card">
         {/* Header */}
         <div className="flex items-center justify-between mb-2">
