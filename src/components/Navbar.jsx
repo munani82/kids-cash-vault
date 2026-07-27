@@ -8,27 +8,27 @@ export default function Navbar({
   onToggleDarkMode
 }) {
   return (
-    <header className="w-full max-w-2xl mx-auto px-5 pt-6 pb-2">
+    <header className="w-full max-w-xl mx-auto px-5 pt-6 pb-2">
       <div className="flex items-center justify-between">
         {/* App Title */}
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-blue-500 text-white font-black text-sm flex items-center justify-center shadow-sm">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-2xl bg-[#3182f6] text-white font-extrabold text-base flex items-center justify-center shadow-sm">
             ₩
           </div>
-          <span className="text-lg font-bold tracking-tight text-gray-900 dark:text-gray-100">
+          <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
             아이금고
           </span>
         </div>
 
         {/* Right Controls */}
         <div className="flex items-center gap-2">
-          {/* Parent Auth Toggle */}
+          {/* Parent Mode Toggle */}
           <button
             onClick={onToggleParentMode}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs ${
               isParentMode
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-300'
+                ? 'bg-[#3182f6] text-white'
+                : 'bg-gray-200/80 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-300'
             }`}
           >
             {isParentMode ? (

@@ -1,29 +1,8 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
 :root {
-  --font-main: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-number: 'Outfit', sans-serif;
-
-  /* Toss Clean Color Palette */
-  --toss-blue: #3182f6;
-  --toss-blue-hover: #1b64da;
-  --toss-blue-light: #e8f3ff;
-  
-  --toss-red: #f04452;
-  --toss-red-light: #ffeeef;
-
-  --toss-bg: #f2f4f6;
-  --toss-card-bg: #ffffff;
-  --toss-text-main: #191f28;
-  --toss-text-sub: #8b95a1;
-  --toss-text-disabled: #b0b8c1;
-
-  --toss-border: #e5e8eb;
-  
-  /* Dark Mode Toss */
-  --toss-bg-dark: #101318;
-  --toss-card-bg-dark: #171c24;
-  --toss-text-main-dark: #f9fafb;
-  --toss-text-sub-dark: #9ea7b3;
-  --toss-border-dark: #2c323b;
+  --font-main: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+  --font-number: 'Outfit', 'Pretendard', sans-serif;
 }
 
 * {
@@ -37,15 +16,15 @@
 
 body {
   min-height: 100vh;
-  background-color: var(--toss-bg);
-  color: var(--toss-text-main);
+  background-color: #f2f4f6;
+  color: #191f28;
   transition: background-color 0.2s ease, color 0.2s ease;
   overflow-x: hidden;
 }
 
 body.dark {
-  background-color: var(--toss-bg-dark);
-  color: var(--toss-text-main-dark);
+  background-color: #101318;
+  color: #f9fafb;
 }
 
 .font-number {
@@ -54,80 +33,20 @@ body.dark {
 
 /* Toss Card Style */
 .toss-card {
-  background-color: var(--toss-card-bg);
+  background-color: #ffffff;
   border-radius: 24px;
   padding: 24px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
   border: 1px solid rgba(0, 0, 0, 0.04);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 body.dark .toss-card {
-  background-color: var(--toss-card-bg-dark);
-  border-color: var(--toss-border-dark);
+  background-color: #171c24;
+  border-color: #2c323b;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
-/* Toss Button Styles */
-.btn-toss-primary {
-  background-color: var(--toss-blue);
-  color: #ffffff;
-  font-weight: 700;
-  font-size: 15px;
-  border-radius: 16px;
-  padding: 14px 24px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
-
-.btn-toss-primary:active {
-  background-color: var(--toss-blue-hover);
-  transform: scale(0.98);
-}
-
-.btn-toss-secondary {
-  background-color: #e8f3ff;
-  color: var(--toss-blue);
-  font-weight: 700;
-  font-size: 15px;
-  border-radius: 16px;
-  padding: 14px 24px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-body.dark .btn-toss-secondary {
-  background-color: rgba(49, 130, 246, 0.15);
-  color: #60a5fa;
-}
-
-.btn-toss-secondary:active {
-  transform: scale(0.98);
-}
-
-.btn-toss-danger {
-  background-color: var(--toss-red-light);
-  color: var(--toss-red);
-  font-weight: 700;
-  font-size: 15px;
-  border-radius: 16px;
-  padding: 14px 24px;
-  border: none;
-  cursor: pointer;
-}
-
-body.dark .btn-toss-danger {
-  background-color: rgba(240, 68, 82, 0.15);
-  color: #f87171;
-}
-
-/* Custom Modal Animation */
+/* Modal Animation */
 @keyframes tossSlideUp {
   from {
     opacity: 0;
@@ -140,10 +59,5 @@ body.dark .btn-toss-danger {
 }
 
 .animate-toss-modal {
-  animation: tossSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  display: none;
+  animation: tossSlideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
