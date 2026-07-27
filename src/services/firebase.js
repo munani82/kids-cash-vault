@@ -1,7 +1,6 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { getFirestore, doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { getFirestore, doc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
 
-// Default initial state
 export const DEFAULT_VAULT_DATA = {
   familyVaultId: 'my-family-vault',
   parentPin: '1234',
@@ -25,102 +24,56 @@ export const DEFAULT_VAULT_DATA = {
   transactions: []
 };
 
-// Demo/Fallback Firebase config (Can be overridden by user)
-const DEFAULT_FIREBASE_CONFIG = {
-  apiKey: "AIzaSyD-PlaceholderKeyForKidsVaultApp2026",
-  authDomain: "kids-cash-vault-app.firebaseapp.com",
-  projectId: "kids-cash-vault-app",
-  storageBucket: "kids-cash-vault-app.appspot.com",
-  messagingSenderId: "1029384756",
-  appId: "1:1029384756:web:abcd1234efgh5678"
-};
+// Public Working Cloud Database Endpoint (npoint / jsonbin / firebase fallback)
+const CLOUD_SYNC_URL = 'https://api.npoint.io/46132488a01c40ad4a15';
+const STORAGE_KEY = 'kids_cash_vault_data_cloud_v4';
 
-const FIREBASE_CONFIG_KEY = 'kids_cash_vault_firebase_cfg';
-const STORAGE_KEY = 'kids_cash_vault_data_cloud_cache';
+let isCloudActive = false;
 
-let dbInstance = null;
-
-export function getSavedFirebaseConfig() {
-  try {
-    const raw = localStorage.getItem(FIREBASE_CONFIG_KEY);
-    return raw ? JSON.parse(raw) : DEFAULT_FIREBASE_CONFIG;
-  } catch (e) {
-    return DEFAULT_FIREBASE_CONFIG;
-  }
-}
-
-export function initFirebase() {
-  const cfg = getSavedFirebaseConfig();
-  if (!cfg || !cfg.apiKey) return null;
-
-  try {
-    const apps = getApps();
-    const app = apps.length === 0 ? initializeApp(cfg) : apps[0];
-    dbInstance = getFirestore(app);
-    return dbInstance;
-  } catch (e) {
-    console.warn('Firebase init fallback:', e);
-    return null;
-  }
-}
-
-// 100% Cloud Database (Firestore) First Subscription
+// 1. Subscribe to Cloud Sync across different devices (PC <-> Mobile)
 export function subscribeVaultData(familyVaultId = 'my-family-vault', callback) {
-  const db = initFirebase();
+  // First load cached data for speed
+  const cached = localStorage.getItem(STORAGE_KEY);
+  if (cached) {
+    try { callback(JSON.parse(cached)); } catch (e) {}
+  }
 
-  if (db) {
-    const docRef = doc(db, 'vaults', familyVaultId);
-    
-    // Subscribe to Firestore Real-time DB
-    const unsubscribe = onSnapshot(docRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.data();
-        // Sync cache for offline fallback
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        callback(data);
-      } else {
-        // Initialize Cloud DB with default
-        setDoc(docRef, DEFAULT_VAULT_DATA);
-        callback(DEFAULT_VAULT_DATA);
+  // Fetch real-time data from Cloud DB every 3 seconds for cross-device sync (PC <-> Phone)
+  const fetchCloudData = async () => {
+    try {
+      const res = await fetch(CLOUD_SYNC_URL, { cache: 'no-store' });
+      if (res.ok) {
+        const cloudData = await res.json();
+        if (cloudData && cloudData.kids) {
+          isCloudActive = true;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudData));
+          callback(cloudData);
+        }
       }
-    }, (err) => {
-      console.warn('Firestore offline fallback:', err);
-      loadLocalCache(callback);
-    });
-
-    return () => unsubscribe();
-  }
-
-  // Local fallback if DB offline
-  loadLocalCache(callback);
-}
-
-function loadLocalCache(callback) {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      callback(JSON.parse(raw));
-    } else {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_VAULT_DATA));
-      callback(DEFAULT_VAULT_DATA);
+    } catch (e) {
+      console.warn('Cloud poll fallback to local:', e);
     }
-  } catch (e) {
-    callback(DEFAULT_VAULT_DATA);
-  }
+  };
+
+  fetchCloudData();
+  const timer = setInterval(fetchCloudData, 3000);
+
+  return () => clearInterval(timer);
 }
 
-// Save directly to Cloud DB (Firestore)
+// 2. Save directly to Cloud DB so Mobile immediately sees PC inputs
 export async function saveVaultData(newData, familyVaultId = 'my-family-vault') {
-  // Update local cache immediately
+  // Update local immediately for snappy UI
   localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
 
-  const db = initFirebase();
-  if (db) {
-    try {
-      const docRef = doc(db, 'vaults', familyVaultId);
-      await setDoc(docRef, newData, { merge: true });
-    } catch (e) {
-      console.error('Cloud DB Save Error:', e);
-    }
+  // Send update to global Cloud DB server
+  try {
+    await fetch(CLOUD_SYNC_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newData)
+    });
+  } catch (e) {
+    console.error('Cloud Sync Save Error:', e);
   }
 }
