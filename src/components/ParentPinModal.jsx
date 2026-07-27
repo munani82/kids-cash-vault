@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, KeyRound, X, Check } from 'lucide-react';
+import { X } from 'lucide-react';
 
 export default function ParentPinModal({
   isOpen,
@@ -23,7 +23,7 @@ export default function ParentPinModal({
           onSuccess();
           setPinInput('');
         } else {
-          setErrorMsg('비밀번호가 일치하지 않습니다. (기본: 1234)');
+          setErrorMsg('비밀번호가 일치하지 않습니다.');
           setTimeout(() => setPinInput(''), 400);
         }
       }
@@ -36,34 +36,30 @@ export default function ParentPinModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-modal">
-      <div className="glass-card max-w-xs w-full p-6 text-center relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-toss-modal">
+      <div className="w-full max-w-xs p-6 bg-white dark:bg-gray-900 rounded-3xl text-center relative border border-gray-100 dark:border-gray-800 shadow-2xl">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+          className="absolute top-4 right-4 p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 mx-auto flex items-center justify-center mb-3">
-          <Lock className="w-6 h-6" />
-        </div>
-
-        <h3 className="font-extrabold text-lg text-gray-800 dark:text-gray-100">
-          부모님 관리자 인증
+        <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100 mb-1 mt-2">
+          부모님 비밀번호
         </h3>
-        <p className="text-xs text-gray-400 mt-1 mb-4">
-          PIN 번호 4자리를 입력해주세요 (기본: 1234)
+        <p className="text-xs text-gray-400 mb-5">
+          비밀번호 4자리를 입력하세요 (기본 1234)
         </p>
 
         {/* PIN Dots */}
-        <div className="flex justify-center gap-3 mb-4">
+        <div className="flex justify-center gap-3 mb-6">
           {[0, 1, 2, 3].map((idx) => (
             <div
               key={idx}
-              className={`w-4 h-4 rounded-full transition-all ${
+              className={`w-3.5 h-3.5 rounded-full transition-all ${
                 pinInput.length > idx
-                  ? 'bg-purple-600 scale-110 shadow-md'
+                  ? 'bg-blue-600 scale-110'
                   : 'bg-gray-200 dark:bg-gray-700'
               }`}
             />
@@ -71,18 +67,18 @@ export default function ParentPinModal({
         </div>
 
         {errorMsg && (
-          <div className="text-xs text-rose-500 font-semibold mb-3 animate-bounce">
+          <div className="text-xs text-red-500 font-bold mb-4">
             {errorMsg}
           </div>
         )}
 
         {/* Numpad */}
-        <div className="grid grid-cols-3 gap-2 max-w-[200px] mx-auto">
+        <div className="grid grid-cols-3 gap-2 max-w-[210px] mx-auto">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
             <button
               key={num}
               onClick={() => handleDigit(String(num))}
-              className="w-14 h-14 rounded-2xl text-lg font-bold font-number bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-100 hover:bg-purple-50 dark:hover:bg-purple-900/30 hover:text-purple-600 transition-all flex items-center justify-center active:scale-95 shadow-sm"
+              className="w-14 h-14 rounded-2xl text-xl font-bold font-number text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-blue-50 transition-colors flex items-center justify-center"
             >
               {num}
             </button>
@@ -90,13 +86,13 @@ export default function ParentPinModal({
           <div />
           <button
             onClick={() => handleDigit('0')}
-            className="w-14 h-14 rounded-2xl text-lg font-bold font-number bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-100 hover:bg-purple-50 dark:hover:bg-purple-900/30 hover:text-purple-600 transition-all flex items-center justify-center active:scale-95 shadow-sm"
+            className="w-14 h-14 rounded-2xl text-xl font-bold font-number text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-blue-50 transition-colors flex items-center justify-center"
           >
             0
           </button>
           <button
             onClick={handleDelete}
-            className="w-14 h-14 rounded-2xl text-xs font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 transition-all flex items-center justify-center active:scale-95"
+            className="w-14 h-14 rounded-2xl text-xs font-bold text-gray-400 hover:text-gray-700 transition-colors flex items-center justify-center"
           >
             지우기
           </button>

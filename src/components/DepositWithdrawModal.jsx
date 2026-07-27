@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { X, ArrowDownLeft, ArrowUpRight, Sparkles } from 'lucide-react';
-import confetti from 'canvas-confetti';
+import { X } from 'lucide-react';
 
 export default function DepositWithdrawModal({
   isOpen,
@@ -10,19 +9,13 @@ export default function DepositWithdrawModal({
   onSubmit
 }) {
   const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState(mode === 'deposit' ? '용돈' : '장난감');
   const [memo, setMemo] = useState('');
 
   if (!isOpen) return null;
 
   const isDeposit = mode === 'deposit';
 
-  const quickAmounts = [1000, 5000, 10000, 50000];
-
-  const depositCategories = ['용돈', '세뱃돈', '심부름', '포상금', '선물', '기타'];
-  const withdrawCategories = ['장난감', '간식/스낵', '학용품', '게임', '선물', '기타'];
-
-  const categories = isDeposit ? depositCategories : withdrawCategories;
+  const quickAmounts = [5000, 10000, 50000, 100000];
 
   const handleQuickAdd = (val) => {
     const current = Number(amount) || 0;
@@ -37,15 +30,8 @@ export default function DepositWithdrawModal({
     onSubmit({
       type: mode,
       amount: numAmount,
-      category,
-      memo: memo.trim() || (isDeposit ? '맡긴 돈 (입금)' : '찾은 돈 (출금)')
+      memo: memo.trim()
     });
-
-    if (isDeposit) {
-      try {
-        confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
-      } catch (e) {}
-    }
 
     setAmount('');
     setMemo('');
@@ -53,123 +39,80 @@ export default function DepositWithdrawModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-modal">
-      <div className="glass-card max-w-md w-full p-6 relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-xs animate-toss-modal">
+      <div className="w-full max-w-md p-6 bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-3xl border border-gray-100 dark:border-gray-800 shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100 dark:border-gray-800">
-          <div className="flex items-center gap-2">
-            <div
-              className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-                isDeposit
-                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                  : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
-              }`}
-            >
-              {isDeposit ? <ArrowDownLeft className="w-5 h-5" /> : <ArrowUpRight className="w-5 h-5" />}
-            </div>
-            <div>
-              <h3 className="font-bold text-base text-gray-800 dark:text-gray-100">
-                {kidName} - {isDeposit ? '현금 맡기기 (입금)' : '현금 찾기 (출금)'}
-              </h3>
-              <p className="text-xs text-gray-400">부모님 입출금 처리 모달</p>
-            </div>
-          </div>
-
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100">
+            {kidName}에게 {isDeposit ? '입금하기' : '출금하기'}
+          </h3>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="p-2 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Quick Amount Buttons */}
-          <div>
-            <label className="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1.5">
-              빠른 금액 추가
-            </label>
-            <div className="grid grid-cols-4 gap-2">
-              {quickAmounts.map((val) => (
-                <button
-                  key={val}
-                  type="button"
-                  onClick={() => handleQuickAdd(val)}
-                  className="py-2 rounded-xl text-xs font-bold font-number bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 hover:bg-purple-100 transition-all"
-                >
-                  +{val / 1000}천원
-                </button>
-              ))}
-            </div>
+          {/* Quick Add Buttons */}
+          <div className="grid grid-cols-4 gap-2">
+            {quickAmounts.map((val) => (
+              <button
+                key={val}
+                type="button"
+                onClick={() => handleQuickAdd(val)}
+                className="py-2.5 rounded-xl text-xs font-bold font-number bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200"
+              >
+                +{val >= 10000 ? `${val / 10000}만원` : `${val / 1000}천원`}
+              </button>
+            ))}
           </div>
 
-          {/* Input Amount */}
+          {/* Amount input */}
           <div>
-            <label className="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">
-              금액 입력 (원)
+            <label className="block text-xs font-bold text-gray-400 mb-1">
+              금액
             </label>
             <div className="relative">
-              <span className="absolute left-3.5 top-3 text-gray-400 font-bold font-number">₩</span>
               <input
                 type="number"
                 placeholder="0"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-lg font-bold font-number focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xl font-bold font-number text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
+                autoFocus
               />
+              <span className="absolute right-4 top-3.5 text-sm font-bold text-gray-400">원</span>
             </div>
           </div>
 
-          {/* Category selection */}
+          {/* Memo input */}
           <div>
-            <label className="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1.5">
-              카테고리 선택
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setCategory(cat)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    category === cat
-                      ? 'bg-purple-600 text-white shadow-md'
-                      : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Memo */}
-          <div>
-            <label className="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">
-              메모 / 사유
+            <label className="block text-xs font-bold text-gray-400 mb-1">
+              메모 (선택)
             </label>
             <input
               type="text"
-              placeholder={isDeposit ? '예: 설날 세뱃돈 받은 것' : '예: 유치원 앞 문방구 장난감'}
+              placeholder="예: 용돈, 세뱃돈, 간식 사먹음"
               value={memo}
               onChange={(e) => setMemo(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
-          {/* Submit */}
+          {/* Submit Button */}
           <div className="pt-2">
             <button
               type="submit"
-              className={`w-full py-3 rounded-xl font-bold text-white text-sm shadow-lg flex items-center justify-center gap-2 ${
+              className={`w-full py-4 rounded-2xl font-bold text-white text-base shadow-sm ${
                 isDeposit
-                  ? 'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700'
-                  : 'bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700'
+                  ? 'bg-blue-600 hover:bg-blue-700'
+                  : 'bg-red-500 hover:bg-red-600'
               }`}
             >
-              <Sparkles className="w-4 h-4" />
-              <span>{isDeposit ? '입금 등록 완료' : '출금 처리 완료'}</span>
+              {isDeposit ? '입금 완료' : '출금 완료'}
             </button>
           </div>
         </form>

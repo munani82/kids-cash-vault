@@ -2,11 +2,9 @@ import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import KidSelector from './components/KidSelector';
 import VaultDashboard from './components/VaultDashboard';
-import SavingGoals from './components/SavingGoals';
 import TransactionHistory from './components/TransactionHistory';
 import DepositWithdrawModal from './components/DepositWithdrawModal';
 import ParentPinModal from './components/ParentPinModal';
-import FirebaseConfigModal from './components/FirebaseConfigModal';
 import { subscribeVaultData, saveVaultData, DEFAULT_VAULT_DATA } from './services/firebase';
 
 export default function App() {
@@ -17,7 +15,6 @@ export default function App() {
 
   // Modals
   const [pinModalOpen, setPinModalOpen] = useState(false);
-  const [firebaseModalOpen, setFirebaseModalOpen] = useState(false);
   const [depWithModal, setDepWithModal] = useState({ isOpen: false, mode: 'deposit' });
 
   // Realtime subscription
@@ -60,7 +57,7 @@ export default function App() {
   };
 
   // Deposit or Withdraw submit
-  const handleDepositWithdraw = async ({ type, amount, category, memo }) => {
+  const handleDepositWithdraw = async ({ type, amount, memo }) => {
     if (!activeKid) return;
 
     const delta = type === 'deposit' ? amount : -amount;
@@ -78,8 +75,7 @@ export default function App() {
       kidId: activeKidId,
       type,
       amount,
-      category,
-      memo,
+      memo: memo || (type === 'deposit' ? '입금' : '출금'),
       date: new Date().toISOString()
     };
 
@@ -93,46 +89,12 @@ export default function App() {
     await saveVaultData(updatedVault);
   };
 
-  // Add new Goal
-  const handleAddGoal = async (kidId, newGoal) => {
-    const updatedKids = vaultData.kids.map(k => {
-      if (k.id === kidId) {
-        return {
-          ...k,
-          goals: [...(k.goals || []), newGoal]
-        };
-      }
-      return k;
-    });
-
-    const updatedVault = { ...vaultData, kids: updatedKids };
-    setVaultData(updatedVault);
-    await saveVaultData(updatedVault);
-  };
-
-  // Delete Goal
-  const handleDeleteGoal = async (kidId, goalId) => {
-    const updatedKids = vaultData.kids.map(k => {
-      if (k.id === kidId) {
-        return {
-          ...k,
-          goals: (k.goals || []).filter(g => g.id !== goalId)
-        };
-      }
-      return k;
-    });
-
-    const updatedVault = { ...vaultData, kids: updatedKids };
-    setVaultData(updatedVault);
-    await saveVaultData(updatedVault);
-  };
-
   // Delete Transaction (Parent Mode)
   const handleDeleteTransaction = async (txId) => {
     const targetTx = (vaultData.transactions || []).find(t => t.id === txId);
     if (!targetTx) return;
 
-    if (!confirm('이 입출금 거래 내역을 삭제하시겠습니까? 잔액이 원상복구됩니다.')) return;
+    if (!confirm('이 입출금 거래 내역을 삭제하시겠습니까? 잔액이 취소됩니다.')) return;
 
     const reverseDelta = targetTx.type === 'deposit' ? -targetTx.amount : targetTx.amount;
 
@@ -160,15 +122,14 @@ export default function App() {
     const name = prompt('새 아이의 이름을 입력해주세요:');
     if (!name) return;
 
-    const avatars = ['🐰', '🐼', '🦁', '🦊', '🦄', '🐨', '🐣'];
+    const avatars = ['👦', '👧', '👶', '🐱', '🐶'];
     const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
 
     const newKid = {
       id: 'kid_' + Date.now(),
       name,
       avatar: randomAvatar,
-      balance: 0,
-      goals: []
+      balance: 0
     };
 
     const updatedVault = {
@@ -189,7 +150,6 @@ export default function App() {
         onToggleParentMode={handleToggleParentMode}
         darkMode={darkMode}
         onToggleDarkMode={() => setDarkMode(!darkMode)}
-        onOpenFirebaseModal={() => setFirebaseModalOpen(true)}
       />
 
       {/* Kid Selector Tabs */}
@@ -211,15 +171,7 @@ export default function App() {
             onOpenWithdrawModal={() => setDepWithModal({ isOpen: true, mode: 'withdraw' })}
           />
 
-          {/* Saving Goals */}
-          <SavingGoals
-            kid={activeKid}
-            onAddGoal={handleAddGoal}
-            onDeleteGoal={handleDeleteGoal}
-            isParentMode={isParentMode}
-          />
-
-          {/* Transaction History */}
+          {/* Simple Transaction History */}
           <TransactionHistory
             transactions={vaultData.transactions || []}
             activeKidId={activeKidId}
@@ -243,11 +195,6 @@ export default function App() {
         correctPin={vaultData.parentPin || '1234'}
         onClose={() => setPinModalOpen(false)}
         onSuccess={handlePinSuccess}
-      />
-
-      <FirebaseConfigModal
-        isOpen={firebaseModalOpen}
-        onClose={() => setFirebaseModalOpen(false)}
       />
     </div>
   );

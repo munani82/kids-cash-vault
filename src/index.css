@@ -1,25 +1,29 @@
 :root {
   --font-main: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-number: 'Outfit', 'Noto Sans KR', sans-serif;
-  
-  --bg-gradient-light: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 50%, #fae8ff 100%);
-  --bg-gradient-dark: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
-  
-  --primary-purple: #7c3aed;
-  --primary-pink: #ec4899;
-  --primary-indigo: #4f46e5;
-  --success-green: #10b981;
-  --warning-amber: #f59e0b;
-  --danger-red: #ef4444;
+  --font-number: 'Outfit', sans-serif;
 
-  --card-bg-light: rgba(255, 255, 255, 0.85);
-  --card-bg-dark: rgba(30, 41, 59, 0.85);
-  --glass-border-light: rgba(255, 255, 255, 0.6);
-  --glass-border-dark: rgba(255, 255, 255, 0.1);
-  --text-main-light: #1e293b;
-  --text-main-dark: #f8fafc;
-  --text-sub-light: #64748b;
-  --text-sub-dark: #94a3b8;
+  /* Toss Clean Color Palette */
+  --toss-blue: #3182f6;
+  --toss-blue-hover: #1b64da;
+  --toss-blue-light: #e8f3ff;
+  
+  --toss-red: #f04452;
+  --toss-red-light: #ffeeef;
+
+  --toss-bg: #f2f4f6;
+  --toss-card-bg: #ffffff;
+  --toss-text-main: #191f28;
+  --toss-text-sub: #8b95a1;
+  --toss-text-disabled: #b0b8c1;
+
+  --toss-border: #e5e8eb;
+  
+  /* Dark Mode Toss */
+  --toss-bg-dark: #101318;
+  --toss-card-bg-dark: #171c24;
+  --toss-text-main-dark: #f9fafb;
+  --toss-text-sub-dark: #9ea7b3;
+  --toss-border-dark: #2c323b;
 }
 
 * {
@@ -28,141 +32,118 @@
   padding: 0;
   font-family: var(--font-main);
   -webkit-tap-highlight-color: transparent;
+  word-break: keep-all;
 }
 
 body {
   min-height: 100vh;
-  background: var(--bg-gradient-light);
-  color: var(--text-main-light);
-  transition: background 0.3s ease, color 0.3s ease;
+  background-color: var(--toss-bg);
+  color: var(--toss-text-main);
+  transition: background-color 0.2s ease, color 0.2s ease;
   overflow-x: hidden;
 }
 
 body.dark {
-  background: var(--bg-gradient-dark);
-  color: var(--text-main-dark);
+  background-color: var(--toss-bg-dark);
+  color: var(--toss-text-main-dark);
 }
 
 .font-number {
   font-family: var(--font-number);
 }
 
-/* Glassmorphism Card Utility */
-.glass-card {
-  background: var(--card-bg-light);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--glass-border-light);
+/* Toss Card Style */
+.toss-card {
+  background-color: var(--toss-card-bg);
   border-radius: 24px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-body.dark .glass-card {
-  background: var(--card-bg-dark);
-  border-color: var(--glass-border-dark);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+body.dark .toss-card {
+  background-color: var(--toss-card-bg-dark);
+  border-color: var(--toss-border-dark);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
-.glass-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 15px 35px rgba(124, 58, 237, 0.12);
+/* Toss Button Styles */
+.btn-toss-primary {
+  background-color: var(--toss-blue);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 15px;
+  border-radius: 16px;
+  padding: 14px 24px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
-/* Piggy Animation */
-@keyframes bounce-piggy {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-8px) rotate(-3deg); }
+.btn-toss-primary:active {
+  background-color: var(--toss-blue-hover);
+  transform: scale(0.98);
 }
 
-.animate-piggy {
-  animation: bounce-piggy 3s infinite ease-in-out;
+.btn-toss-secondary {
+  background-color: #e8f3ff;
+  color: var(--toss-blue);
+  font-weight: 700;
+  font-size: 15px;
+  border-radius: 16px;
+  padding: 14px 24px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-@keyframes pulse-glow {
-  0%, 100% { filter: drop-shadow(0 0 15px rgba(236, 72, 153, 0.4)); }
-  50% { filter: drop-shadow(0 0 25px rgba(124, 58, 237, 0.7)); }
+body.dark .btn-toss-secondary {
+  background-color: rgba(49, 130, 246, 0.15);
+  color: #60a5fa;
 }
 
-.glow-effect {
-  animation: pulse-glow 2.5s infinite;
+.btn-toss-secondary:active {
+  transform: scale(0.98);
+}
+
+.btn-toss-danger {
+  background-color: var(--toss-red-light);
+  color: var(--toss-red);
+  font-weight: 700;
+  font-size: 15px;
+  border-radius: 16px;
+  padding: 14px 24px;
+  border: none;
+  cursor: pointer;
+}
+
+body.dark .btn-toss-danger {
+  background-color: rgba(240, 68, 82, 0.15);
+  color: #f87171;
+}
+
+/* Custom Modal Animation */
+@keyframes tossSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-toss-modal {
+  animation: tossSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.5);
-  border-radius: 999px;
-}
-
-/* Modal Overlay Animation */
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-.animate-modal {
-  animation: fadeIn 0.2s ease-out forwards;
-}
-
-/* Button & Badge Utilities */
-.btn-gradient-primary {
-  background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
-  color: white;
-  border: none;
-  font-weight: 700;
-  border-radius: 16px;
-  padding: 12px 24px;
-  cursor: pointer;
-  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
-  transition: all 0.2s ease;
-}
-
-.btn-gradient-primary:active {
-  transform: scale(0.97);
-  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.2);
-}
-
-.btn-gradient-secondary {
-  background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
-  color: white;
-  border: none;
-  font-weight: 700;
-  border-radius: 16px;
-  padding: 12px 24px;
-  cursor: pointer;
-  box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
-  transition: all 0.2s ease;
-}
-
-.btn-gradient-secondary:active {
-  transform: scale(0.97);
-}
-
-.badge-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-/* Money Counter Animation */
-.coin-particle {
-  position: absolute;
-  pointer-events: none;
-  animation: floatUp 1s ease-out forwards;
-}
-
-@keyframes floatUp {
-  0% { opacity: 1; transform: translateY(0) scale(1); }
-  100% { opacity: 0; transform: translateY(-50px) scale(1.2); }
+  display: none;
 }

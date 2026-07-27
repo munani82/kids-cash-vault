@@ -1,5 +1,5 @@
 import React from 'react';
-import { History, ArrowDownLeft, ArrowUpRight, Trash2, Calendar } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 
 export default function TransactionHistory({
   transactions,
@@ -12,31 +12,27 @@ export default function TransactionHistory({
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 py-3">
-      <div className="glass-card p-6">
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-2">
-            <History className="w-5 h-5 text-indigo-500" />
-            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">
-              최근 입출금 내역 (Timeline)
-            </h3>
-          </div>
-          <span className="text-xs text-gray-500 font-number">
-            총 {kidTransactions.length}건
+    <div className="w-full max-w-2xl mx-auto px-5 py-3">
+      <div className="toss-card">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-bold text-base text-gray-900 dark:text-gray-100">
+            입출금 내역
+          </h3>
+          <span className="text-xs text-gray-400 font-number">
+            {kidTransactions.length}건
           </span>
         </div>
 
         {kidTransactions.length === 0 ? (
-          <div className="text-center py-8 text-gray-400 text-sm">
-            아직 거래 내역이 없습니다.
+          <div className="py-8 text-center text-xs text-gray-400 font-medium">
+            입출금 내역이 없습니다.
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="divide-y divide-gray-100 dark:divide-gray-800">
             {kidTransactions.map((tx) => {
               const isDeposit = tx.type === 'deposit';
               const dateStr = new Date(tx.date).toLocaleDateString('ko-KR', {
-                year: 'numeric',
-                month: 'short',
+                month: 'long',
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit'
@@ -45,59 +41,38 @@ export default function TransactionHistory({
               return (
                 <div
                   key={tx.id}
-                  className="flex items-center justify-between p-3.5 rounded-2xl bg-white/60 dark:bg-gray-800/60 border border-gray-100 dark:border-gray-700/60 hover:bg-white dark:hover:bg-gray-800 transition-all group"
+                  className="py-3.5 flex items-center justify-between group"
                 >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
-                        isDeposit
-                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                          : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
-                      }`}
-                    >
-                      {isDeposit ? <ArrowDownLeft className="w-5 h-5" /> : <ArrowUpRight className="w-5 h-5" />}
-                    </div>
-
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-gray-800 dark:text-gray-100">
-                          {tx.memo || (isDeposit ? '맡긴 돈 (입금)' : '찾은 돈 (출금)')}
+                  <div>
+                    <div className="text-sm font-bold text-gray-800 dark:text-gray-200">
+                      {isDeposit ? '입금' : '출금'}
+                      {tx.memo && tx.memo !== '맡긴 돈 (입금)' && tx.memo !== '찾은 돈 (출금)' && (
+                        <span className="ml-1.5 font-normal text-xs text-gray-500">
+                          · {tx.memo}
                         </span>
-                        {tx.category && (
-                          <span
-                            className={`badge-tag ${
-                              isDeposit
-                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300'
-                                : 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300'
-                            }`}
-                          >
-                            {tx.category}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1 text-[11px] text-gray-400 font-number mt-0.5">
-                        <Calendar className="w-3 h-3" />
-                        <span>{dateStr}</span>
-                      </div>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-400 font-number mt-0.5">
+                      {dateStr}
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3">
                     <div
-                      className={`text-base font-black font-number ${
+                      className={`text-base font-extrabold font-number ${
                         isDeposit
-                          ? 'text-emerald-600 dark:text-emerald-400'
-                          : 'text-rose-600 dark:text-rose-400'
+                          ? 'text-blue-600 dark:text-blue-400'
+                          : 'text-gray-900 dark:text-gray-100'
                       }`}
                     >
-                      {isDeposit ? '+' : '-'}₩{Number(tx.amount).toLocaleString()}
+                      {isDeposit ? '+' : '-'}{Number(tx.amount).toLocaleString()}원
                     </div>
 
                     {isParentMode && (
                       <button
                         onClick={() => onDeleteTransaction(tx.id)}
-                        className="opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-red-500 transition-all"
-                        title="내역 취소/삭제"
+                        className="text-gray-300 hover:text-red-500 transition-colors p-1"
+                        title="삭제"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
