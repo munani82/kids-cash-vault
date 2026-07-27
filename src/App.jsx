@@ -6,10 +6,11 @@ import TransactionHistory from './components/TransactionHistory';
 import DepositWithdrawModal from './components/DepositWithdrawModal';
 import ParentPinModal from './components/ParentPinModal';
 import ChangePinModal from './components/ChangePinModal';
-import { subscribeVaultData, saveVaultData, DEFAULT_VAULT_DATA } from './services/firebase';
+import { subscribeVaultData, saveVaultData, getInitialVaultData } from './services/firebase';
 
 export default function App() {
-  const [vaultData, setVaultData] = useState(DEFAULT_VAULT_DATA);
+  // Use getInitialVaultData() so refresh NEVER resets PIN or entered data
+  const [vaultData, setVaultData] = useState(() => getInitialVaultData());
   const [activeKidId, setActiveKidId] = useState('kid1');
   const [isParentMode, setIsParentMode] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
@@ -19,7 +20,7 @@ export default function App() {
   const [changePinModalOpen, setChangePinModalOpen] = useState(false);
   const [depWithModal, setDepWithModal] = useState({ isOpen: false, mode: 'deposit' });
 
-  // Realtime subscription
+  // Subscription
   useEffect(() => {
     const unsub = subscribeVaultData(vaultData.familyVaultId || 'my-family-vault', (data) => {
       if (data) {
@@ -66,14 +67,6 @@ export default function App() {
     };
     setVaultData(updatedVault);
     await saveVaultData(updatedVault);
-  };
-
-  // Reset Vault Data (Parent)
-  const handleResetVaultData = async () => {
-    if (confirm('모든 거래 내역과 잔액을 깨끗하게 초기화하고 새로 시작할까요?')) {
-      setVaultData(DEFAULT_VAULT_DATA);
-      await saveVaultData(DEFAULT_VAULT_DATA);
-    }
   };
 
   // Deposit or Withdraw submit
@@ -169,7 +162,6 @@ export default function App() {
         isParentMode={isParentMode}
         onToggleParentMode={handleToggleParentMode}
         onOpenChangePinModal={() => setChangePinModalOpen(true)}
-        onResetVaultData={handleResetVaultData}
         darkMode={darkMode}
         onToggleDarkMode={() => setDarkMode(!darkMode)}
       />

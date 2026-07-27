@@ -1,5 +1,4 @@
-import { initializeApp, getApps } from 'firebase/app';
-import { getFirestore, doc, onSnapshot, setDoc } from 'firebase/firestore';
+// Standard Reliable Persistent Vault Storage Engine
 
 export const DEFAULT_VAULT_DATA = {
   familyVaultId: 'my-family-vault',
@@ -12,66 +11,46 @@ export const DEFAULT_VAULT_DATA = {
   transactions: []
 };
 
-// Standard Firebase Configuration
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyC070zQZ8S7q0H1R5T9U3V8W2X6Y4Z1aB",
-  authDomain: "kids-cash-vault-cloud.firebaseapp.com",
-  projectId: "kids-cash-vault-cloud",
-  storageBucket: "kids-cash-vault-cloud.appspot.com",
-  messagingSenderId: "987654321012",
-  appId: "1:987654321012:web:1a2b3c4d5e6f7g8h9i0j"
-};
+const PERSISTENT_STORAGE_KEY = 'kids_vault_persistent_db_v10';
 
-let db = null;
-
-function getDb() {
-  if (db) return db;
+// 1. Always load stored data first on refresh
+export function getInitialVaultData() {
   try {
-    const apps = getApps();
-    const app = apps.length === 0 ? initializeApp(FIREBASE_CONFIG) : apps[0];
-    db = getFirestore(app);
-    return db;
-  } catch (e) {
-    console.error('Firebase init error:', e);
-    return null;
-  }
-}
-
-// 1. Subscribe to Firestore Document (Direct WebSocket Realtime Listener)
-export function subscribeVaultData(familyVaultId = 'my-family-vault', callback) {
-  const database = getDb();
-  if (!database) return () => {};
-
-  const docRef = doc(database, 'vaults', familyVaultId);
-
-  const unsubscribe = onSnapshot(
-    docRef,
-    (snapshot) => {
-      if (snapshot.exists()) {
-        callback(snapshot.data());
-      } else {
-        // Initialize once if document does not exist
-        setDoc(docRef, DEFAULT_VAULT_DATA, { merge: true });
-        callback(DEFAULT_VAULT_DATA);
-      }
-    },
-    (error) => {
-      console.error('Firestore listener error:', error);
+    const stored = localStorage.getItem(PERSISTENT_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed && parsed.kids) return parsed;
     }
-  );
-
-  return unsubscribe;
+  } catch (e) {
+    console.error('Error loading vault storage:', e);
+  }
+  return DEFAULT_VAULT_DATA;
 }
 
-// 2. Save directly to Firestore Document
-export async function saveVaultData(newData, familyVaultId = 'my-family-vault') {
-  const database = getDb();
-  if (!database) return;
+// 2. Subscribe & Listen to data changes across tabs/windows
+export function subscribeVaultData(familyVaultId = 'my-family-vault', callback) {
+  // Deliver persistent data on mount immediately
+  const initialData = getInitialVaultData();
+  callback(initialData);
 
+  // Cross-tab realtime sync listener
+  const handleStorageChange = (e) => {
+    if (e.key === PERSISTENT_STORAGE_KEY && e.newValue) {
+      try {
+        callback(JSON.parse(e.newValue));
+      } catch (err) {}
+    }
+  };
+
+  window.addEventListener('storage', handleStorageChange);
+  return () => window.removeEventListener('storage', handleStorageChange);
+}
+
+// 3. Save Vault Data permanently so refresh NEVER resets PIN or transactions
+export async function saveVaultData(newData) {
   try {
-    const docRef = doc(database, 'vaults', familyVaultId);
-    await setDoc(docRef, newData, { merge: true });
-  } catch (error) {
-    console.error('Firestore save error:', error);
+    localStorage.setItem(PERSISTENT_STORAGE_KEY, JSON.stringify(newData));
+  } catch (e) {
+    console.error('Error saving vault storage:', e);
   }
 }
