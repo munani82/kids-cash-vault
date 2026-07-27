@@ -12,14 +12,14 @@ export const DEFAULT_VAULT_DATA = {
       name: '소율',
       avatar: '👧',
       color: '#3182f6',
-      balance: 45000
+      balance: 50000
     },
     {
       id: 'kid2',
       name: '소원',
       avatar: '👧',
       color: '#ec4899',
-      balance: 28000
+      balance: 30000
     }
   ],
   transactions: [
@@ -28,42 +28,26 @@ export const DEFAULT_VAULT_DATA = {
       kidId: 'kid1',
       type: 'deposit',
       amount: 50000,
-      memo: '할머니께 받은 용돈',
-      date: new Date(Date.now() - 86400000 * 3).toISOString()
-    },
-    {
-      id: 't2',
-      kidId: 'kid1',
-      type: 'withdraw',
-      amount: 5000,
-      memo: '아이스크림 사먹기',
-      date: new Date(Date.now() - 86400000 * 1).toISOString()
-    },
-    {
-      id: 't3',
-      kidId: 'kid2',
-      type: 'deposit',
-      amount: 30000,
-      memo: '이번 달 용돈',
+      memo: '입금 (용돈)',
       date: new Date(Date.now() - 86400000 * 2).toISOString()
     },
     {
-      id: 't4',
+      id: 't2',
       kidId: 'kid2',
-      type: 'withdraw',
-      amount: 2000,
-      memo: '학용품 구매',
-      date: new Date(Date.now() - 86400000 * 0.5).toISOString()
+      type: 'deposit',
+      amount: 30000,
+      memo: '입금 (용돈)',
+      date: new Date(Date.now() - 86400000 * 1).toISOString()
     }
   ]
 };
 
-// Updated storage key to v2 to clear legacy local cache (Jiwoo/Minjun)
-const STORAGE_KEY = 'kids_cash_vault_data_v2';
+// Storage key v3 to completely replace transactions cache
+const STORAGE_KEY = 'kids_cash_vault_data_v3';
 const FIREBASE_CONFIG_KEY = 'kids_cash_vault_firebase_cfg';
 
 const broadcastChannel = typeof window !== 'undefined' && 'BroadcastChannel' in window
-  ? new BroadcastChannel('kids_cash_vault_sync_v2')
+  ? new BroadcastChannel('kids_cash_vault_sync_v3')
   : null;
 
 let dbInstance = null;
@@ -152,25 +136,13 @@ export function subscribeVaultData(familyVaultId = 'my-family-vault', callback) 
 
 function loadLocal(callback) {
   try {
-    // Clear old v1 key if present
+    // Clear legacy v1 & v2 keys completely
     localStorage.removeItem('kids_cash_vault_data_v1');
+    localStorage.removeItem('kids_cash_vault_data_v2');
 
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      let updated = false;
-
-      if (parsed.kids) {
-        parsed.kids.forEach(k => {
-          if (k.name === '지우') { k.name = '소율'; k.avatar = '👧'; updated = true; }
-          if (k.name === '민준') { k.name = '소원'; k.avatar = '👧'; updated = true; }
-          if (k.name === '소원' && k.avatar === '👶') { k.avatar = '👧'; updated = true; }
-        });
-      }
-
-      if (updated) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
-      }
       callback(parsed);
     } else {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_VAULT_DATA));

@@ -68,6 +68,14 @@ export default function App() {
     await saveVaultData(updatedVault);
   };
 
+  // Reset Vault Data (Parent)
+  const handleResetVaultData = async () => {
+    if (confirm('모든 거래 내역과 잔액을 깨끗하게 초기화하고 새로 시작할까요?')) {
+      setVaultData(DEFAULT_VAULT_DATA);
+      await saveVaultData(DEFAULT_VAULT_DATA);
+    }
+  };
+
   // Deposit or Withdraw submit
   const handleDepositWithdraw = async ({ type, amount, memo }) => {
     if (!activeKid) return;
@@ -134,7 +142,7 @@ export default function App() {
     const name = prompt('새 아이의 이름을 입력해주세요:');
     if (!name) return;
 
-    const avatars = ['👦', '👧', '👶', '🐱', '🐶'];
+    const avatars = ['👧', '👦', '👶', '🐱', '🐶'];
     const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
 
     const newKid = {
@@ -161,6 +169,7 @@ export default function App() {
         isParentMode={isParentMode}
         onToggleParentMode={handleToggleParentMode}
         onOpenChangePinModal={() => setChangePinModalOpen(true)}
+        onResetVaultData={handleResetVaultData}
         darkMode={darkMode}
         onToggleDarkMode={() => setDarkMode(!darkMode)}
       />
