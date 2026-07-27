@@ -17,7 +17,7 @@ export const DEFAULT_VAULT_DATA = {
     {
       id: 'kid2',
       name: '소원',
-      avatar: '👶',
+      avatar: '👧',
       color: '#ec4899',
       balance: 28000
     }
@@ -154,14 +154,25 @@ function loadLocal(callback) {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      // Migration check for names
-      if (parsed.kids && parsed.kids[0]?.name === '지우') {
-        parsed.kids[0].name = '소율';
-        parsed.kids[0].avatar = '👧';
-        if (parsed.kids[1]) {
-          parsed.kids[1].name = '소원';
-          parsed.kids[1].avatar = '👶';
+      let updated = false;
+
+      if (parsed.kids) {
+        // Name & Avatar migration for Sowon
+        const sowon = parsed.kids.find(k => k.name === '소원' || k.id === 'kid2');
+        if (sowon && sowon.avatar === '👶') {
+          sowon.avatar = '👧';
+          updated = true;
         }
+
+        const soyul = parsed.kids.find(k => k.id === 'kid1');
+        if (soyul && soyul.name !== '소율') {
+          soyul.name = '소율';
+          soyul.avatar = '👧';
+          updated = true;
+        }
+      }
+
+      if (updated) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
       }
       callback(parsed);
