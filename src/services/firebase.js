@@ -1,4 +1,4 @@
-// 100% Pure Cloud DB Engine (No Local Storage Blocking)
+// Direct Cloud Sync Engine with 0.8s High-Speed Pulse
 
 export const DEFAULT_VAULT_DATA = {
   familyVaultId: 'my-family-vault',
@@ -11,14 +11,12 @@ export const DEFAULT_VAULT_DATA = {
   transactions: []
 };
 
-// Clean Live Cloud Endpoint
 const PURE_CLOUD_URL = 'https://jsonblob.com/api/jsonBlob/019fa21f-e3db-7c35-88d2-7e4a9bf04c2d';
 
 let isSaving = false;
 
-// 1. Subscribe to Cloud DB ONLY (PC <-> Mobile 100% Direct Realtime Cloud Sync)
+// 1. Subscribe to Cloud DB with 0.8s High-Speed Pulse
 export function subscribeVaultData(familyVaultId = 'my-family-vault', callback) {
-  // Fetch directly from Cloud DB on load
   const syncWithCloud = async () => {
     if (isSaving) return;
     try {
@@ -29,18 +27,19 @@ export function subscribeVaultData(familyVaultId = 'my-family-vault', callback) 
       if (res.ok) {
         const cloudData = await res.json();
         if (cloudData && cloudData.kids) {
-          // Always deliver Cloud DB data directly to UI
           callback(cloudData);
         }
       }
     } catch (e) {
-      console.warn('Pure Cloud DB Sync Error:', e);
+      console.warn('Cloud DB Sync Error:', e);
     }
   };
 
+  // Immediate sync on load
   syncWithCloud();
-  // Poll Cloud DB every 2 seconds so phone immediately reflects PC edits
-  const intervalId = setInterval(syncWithCloud, 2000);
+
+  // High-speed pulse every 0.8 seconds (800ms) to eliminate 3~5s delay
+  const intervalId = setInterval(syncWithCloud, 800);
 
   return () => clearInterval(intervalId);
 }
@@ -56,10 +55,10 @@ export async function saveVaultData(newData, familyVaultId = 'my-family-vault') 
       body: JSON.stringify(newData)
     });
   } catch (e) {
-    console.error('Pure Cloud Save Error:', e);
+    console.error('Cloud Save Error:', e);
   } finally {
     setTimeout(() => {
       isSaving = false;
-    }, 400);
+    }, 250);
   }
 }
