@@ -1,4 +1,4 @@
-// Permanent Vercel Serverless Sync Engine
+// Direct Single Source Vault Sync Engine
 
 export const DEFAULT_VAULT_DATA = {
   familyVaultId: 'my-family-vault',
@@ -11,23 +11,11 @@ export const DEFAULT_VAULT_DATA = {
   transactions: []
 };
 
-// Permanent Vercel API Endpoint (No 24h Expiration, No Purge)
 const API_VAULT_URL = '/api/vault';
-const LOCAL_FALLBACK_KEY = 'kids_vault_permanent_fallback_v1';
-
 let isSaving = false;
 
-// 1. Subscribe to Permanent Vercel Serverless DB
+// 1. Subscribe to Pure Cloud Database API (Direct sync on all devices)
 export function subscribeVaultData(familyVaultId = 'my-family-vault', callback) {
-  // 1-1. Immediate initial render from local fallback to prevent flash of zero balance
-  try {
-    const cached = localStorage.getItem(LOCAL_FALLBACK_KEY);
-    if (cached) {
-      callback(JSON.parse(cached));
-    }
-  } catch (e) {}
-
-  // 1-2. Sync with Permanent Vercel Serverless API
   const syncWithCloud = async () => {
     if (isSaving) return;
     try {
@@ -38,27 +26,25 @@ export function subscribeVaultData(familyVaultId = 'my-family-vault', callback) 
       if (res.ok) {
         const cloudData = await res.json();
         if (cloudData && Array.isArray(cloudData.kids)) {
-          localStorage.setItem(LOCAL_FALLBACK_KEY, JSON.stringify(cloudData));
+          // Always deliver live Cloud DB data to UI directly
           callback(cloudData);
         }
       }
     } catch (e) {
-      console.warn('Permanent Vault Sync Warning:', e);
+      console.warn('Vault Direct Sync Warning:', e);
     }
   };
 
   syncWithCloud();
+  // 1-second pulse for instant cross-device updates
   const intervalId = setInterval(syncWithCloud, 1000);
 
   return () => clearInterval(intervalId);
 }
 
-// 2. Save directly to Permanent Vercel Serverless DB
+// 2. Save directly to Cloud DB API
 export async function saveVaultData(newData, familyVaultId = 'my-family-vault') {
   isSaving = true;
-  try {
-    localStorage.setItem(LOCAL_FALLBACK_KEY, JSON.stringify(newData));
-  } catch (e) {}
 
   try {
     await fetch(API_VAULT_URL, {
@@ -67,10 +53,10 @@ export async function saveVaultData(newData, familyVaultId = 'my-family-vault') 
       body: JSON.stringify(newData)
     });
   } catch (e) {
-    console.error('Permanent Vault Save Error:', e);
+    console.error('Vault Direct Save Error:', e);
   } finally {
     setTimeout(() => {
       isSaving = false;
-    }, 200);
+    }, 300);
   }
 }
