@@ -1,0 +1,37 @@
+{
+  "familyVaultId": "my_family_vault",
+  "parentPin": "1234",
+  "activeKidId": "kid1",
+  "kids": [
+    {
+      "id": "kid1",
+      "name": "소율",
+      "avatar": "👧",
+      "balance": 400000
+    },
+    {
+      "id": "kid2",
+      "name": "소원",
+      "avatar": "👧",
+      "balance": 100
+    }
+  ],
+  "transactions": [
+    {
+      "id": "tx_soyul_init",
+      "kidId": "kid1",
+      "type": "deposit",
+      "amount": 400000,
+      "memo": "맡긴 돈 (입금)",
+      "date": "2026/07/29"
+    },
+    {
+      "id": "tx_sowon_init",
+      "kidId": "kid2",
+      "type": "deposit",
+      "amount": 100,
+      "memo": "맡긴 돈 (입금)",
+      "date": "2026/07/29"
+    }
+  ]
+}
