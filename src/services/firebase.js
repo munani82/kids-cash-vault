@@ -62,7 +62,7 @@ function getDbInstance() {
     dbInstance = getDatabase(app);
     return dbInstance;
   } catch (error) {
-    console.error('Firebase Realtime Database 초기화 실패:', error);
+    console.error('Firebase 초기화 오류:', error);
     return null;
   }
 }
@@ -86,7 +86,6 @@ export function subscribeVaultData(familyVaultId = 'my_family_vault', callback) 
   const db = getDbInstance();
 
   if (!db) {
-    console.warn('Firebase 환경 변수 미설정: 백업된 로컬 데이터로 동작합니다.');
     return () => {};
   }
 
@@ -108,7 +107,7 @@ export function subscribeVaultData(familyVaultId = 'my_family_vault', callback) 
       }
     },
     (error) => {
-      console.error('Firebase 실시간 동기화 수신 오류:', error);
+      console.error('Firebase 실시간 수신 오류:', error);
     }
   );
 
@@ -126,7 +125,6 @@ export async function saveVaultData(newData, familyVaultId = 'my_family_vault') 
 
   const db = getDbInstance();
   if (!db) {
-    console.warn('Firebase 미연결: 변경사항이 로컬 브라우저에 저장되었습니다.');
     return;
   }
 
@@ -135,6 +133,6 @@ export async function saveVaultData(newData, familyVaultId = 'my_family_vault') 
     const vaultRef = ref(db, 'vaults/' + cleanVaultId);
     await set(vaultRef, newData);
   } catch (error) {
-    console.error('Firebase 영구 저장 오류:', error);
+    console.error('Firebase 저장 오류:', error);
   }
 }
